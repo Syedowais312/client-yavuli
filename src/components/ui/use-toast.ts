@@ -1,3 +1,12 @@
-import { useToast, toast } from "@/hooks/use-toast";
+// src/hooks/use-toast.ts (hook-free stub)
 
-export { useToast, toast };
+export function useToast() {
+  return {
+    add: () => {}, // dummy function
+    remove: () => {}, // dummy function
+  };
+}
+
+export const toast = {
+  show: () => {}, // dummy function
+};
