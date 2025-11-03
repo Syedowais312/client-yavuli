@@ -1,11 +1,75 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+// ✅ If you're using Firebase
+// import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+// import { auth } from "@/firebase";  // your firebase config
+
+// ✅ If you're using a custom backend (Node/Express)
+// const API_URL = "http://localhost:5000/api/auth/login";
+
 const Login = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
+
+  // Email Login Handler
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      // -------- Option A: Backend-based login --------
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.message || "Login failed");
+
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
+
+      // -------- Option B: Firebase-based login --------
+      // const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // console.log(userCredential.user);
+      // navigate("/dashboard");
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Google Login
+  const handleGoogleLogin = async () => {
+    try {
+      // -------- Option A: Firebase Google Auth --------
+      // const provider = new GoogleAuthProvider();
+      // const result = await signInWithPopup(auth, provider);
+      // console.log(result.user);
+      // navigate("/dashboard");
+
+      // -------- Option B: Your own backend Google OAuth --------
+      window.location.href = "http://localhost:5000/api/auth/google"; // redirect to backend route
+
+    } catch (err) {
+      setError("Google login failed.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6 animate-fade-up">
@@ -17,11 +81,18 @@ const Login = () => {
             </div>
           </Link>
           <h1 className="text-2xl font-bold mt-4">Welcome Back</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to continue to Yavuli</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Sign in to continue to Yavuli
+          </p>
         </div>
 
         {/* Google Sign In */}
-        <Button variant="outline" className="w-full border-2 hover:bg-muted">
+        <Button
+          variant="outline"
+          className="w-full border-2 hover:bg-muted"
+          onClick={handleGoogleLogin}
+          disabled={loading}
+        >
           <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
             <path
               fill="currentColor"
@@ -51,14 +122,16 @@ const Login = () => {
         </div>
 
         {/* Email Login Form */}
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleLogin}>
           <div className="space-y-2">
             <Label htmlFor="email">College Email</Label>
             <Input
               id="email"
               type="email"
               placeholder="you@college.edu"
-              className="focus:ring-accent"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
 
@@ -68,9 +141,13 @@ const Login = () => {
               id="password"
               type="password"
               placeholder="••••••••"
-              className="focus:ring-accent"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
           </div>
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <div className="flex items-center justify-between text-sm">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -82,8 +159,12 @@ const Login = () => {
             </Link>
           </div>
 
-          <Button type="submit" className="w-full bg-gradient-hero text-white hover:shadow-glow">
-            Sign In
+          <Button
+            type="submit"
+            className="w-full bg-gradient-hero text-white hover:shadow-glow"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
